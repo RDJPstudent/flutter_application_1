@@ -1,6 +1,6 @@
 # flutter_application_1
 
-A new Flutter project.
+A new Flutter project. This is a simplistic multi-choice mobile game.
 
 ## Getting Started
 
