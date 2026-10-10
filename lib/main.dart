@@ -25,7 +25,7 @@ class AnswerRecord {
 }
 
 // The three main states of our application.
-enum GameScreen { setup, quiz, results }
+enum GameScreen { setup, quiz, feedback, results }
 
 enum QuizMode { random, adaptive }
 

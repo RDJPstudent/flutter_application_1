@@ -1,4 +1,3 @@
-
 [
   {
     "id": 1,
@@ -6,11 +5,13 @@
     "difficulty": "Easy",
     "imagePath": "assets/images/mountain_range.jpg",
     "correctAnswer": "Mountain range",
-    "incorrectAnswers": [
-      "Mountain pass",
-      "Plateau",
-      "Valley"
-    ]
+    "incorrectAnswers": ["Mountain pass", "Plateau", "Valley"],
+    "explanation": "A mountain range is a group of connected mountains forming a recognizable geographic system. Look for multiple elevated peaks and ridges that are part of the same larger mountain system.",
+    "incorrectExplanations": {
+      "Mountain pass": "A mountain pass is a comparatively low route through mountainous terrain, rather than the entire connected mountain system.",
+      "Plateau": "A plateau is a broad area of elevated, relatively level land rather than a series of mountain peaks.",
+      "Valley": "A valley is a lower area of land between surrounding higher terrain, often containing a river or stream."
+    }
   },
   {
     "id": 2,
@@ -18,11 +19,7 @@
     "difficulty": "Easy",
     "imagePath": "assets/images/canyon.jpg",
     "correctAnswer": "Canyon",
-    "incorrectAnswers": [
-      "River delta",
-      "Glacier",
-      "Volcanic cone"
-    ]
+    "incorrectAnswers": ["River delta", "Glacier", "Volcanic cone"]
   },
   {
     "id": 3,
@@ -30,11 +27,7 @@
     "difficulty": "Easy",
     "imagePath": "assets/images/waterfall.jpg",
     "correctAnswer": "Waterfall",
-    "incorrectAnswers": [
-      "Rapids",
-      "Estuary",
-      "Glacier"
-    ]
+    "incorrectAnswers": ["Rapids", "Estuary", "Glacier"]
   },
   {
     "id": 4,
@@ -42,11 +35,7 @@
     "difficulty": "Easy",
     "imagePath": "assets/images/sand_dunes.jpg",
     "correctAnswer": "Sand dunes",
-    "incorrectAnswers": [
-      "Plateau",
-      "Riverbank",
-      "Rocky ridge"
-    ]
+    "incorrectAnswers": ["Plateau", "Riverbank", "Rocky ridge"]
   },
   {
     "id": 5,
@@ -54,11 +43,7 @@
     "difficulty": "Intermediate",
     "imagePath": "assets/images/volcano.jpg",
     "correctAnswer": "Volcano",
-    "incorrectAnswers": [
-      "Mesa",
-      "Butte",
-      "Glacial valley"
-    ]
+    "incorrectAnswers": ["Mesa", "Butte", "Glacial valley"]
   },
   {
     "id": 6,
@@ -66,10 +51,6 @@
     "difficulty": "Easy",
     "imagePath": "assets/images/glacier.jpg",
     "correctAnswer": "Glacier",
-    "incorrectAnswers": [
-        "Sand dune",
-        "Lava flow",
-        "River delta"
-    ]
+    "incorrectAnswers": ["Sand dune", "Lava flow", "River delta"]
   }
 ]
