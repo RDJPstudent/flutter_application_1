@@ -269,6 +269,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _selectAnswer(String answer) {
+    // Prevent changing a submitted answer.
     if (_selectedAnswer != null) return;
 
     setState(() {
@@ -280,6 +281,9 @@ class _QuizScreenState extends State<QuizScreen> {
           selectedAnswer: answer,
         ),
       );
+
+      // Immediately display educational feedback.
+      _screen = GameScreen.feedback;
     });
   }
 
@@ -295,6 +299,9 @@ class _QuizScreenState extends State<QuizScreen> {
         _currentIndex++;
         _selectedAnswer = null;
         _shuffleOptions();
+
+        // Return from feedback to image identification.
+        _screen = GameScreen.quiz;
       });
 
       return;
@@ -386,21 +393,19 @@ class _QuizScreenState extends State<QuizScreen> {
         ),
       );
     } else {
-      
-switch (_screen) {
-  case GameScreen.setup:
-    content = _buildSetupScreen();
+      switch (_screen) {
+        case GameScreen.setup:
+          content = _buildSetupScreen();
 
-  case GameScreen.quiz:
-    content = _buildQuizScreen();
+        case GameScreen.quiz:
+          content = _buildQuizScreen();
 
-  case GameScreen.feedback:
-    content = _buildFeedbackScreen();
+        case GameScreen.feedback:
+          content = _buildFeedbackScreen();
 
-  case GameScreen.results:
-    content = _buildResultsScreen();
-}
-
+        case GameScreen.results:
+          content = _buildResultsScreen();
+      }
     }
 
     return Scaffold(body: SafeArea(child: content));
@@ -805,6 +810,212 @@ switch (_screen) {
     );
   }
 
+  Widget _buildFeedbackScreen() {
+    final question = _questions[_currentIndex];
+    final record = _answers.last;
+
+    final isCorrect = record.isCorrect;
+
+    final explanation = question.explanation.isNotEmpty
+        ? question.explanation
+        : 'An explanation has not been added '
+              'for this question yet.';
+
+    final wrongAnswerExplanation =
+        question.incorrectExplanations[record.selectedAnswer];
+
+    final isLastQuestion = _currentIndex == _questions.length - 1;
+
+    return Column(
+      children: [
+        // Scrollable feedback content.
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    isCorrect ? Icons.check_circle : Icons.cancel,
+                    color: isCorrect ? Colors.green : Colors.red,
+                    size: 30,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      isCorrect ? 'Correct answer!' : 'Incorrect answer',
+                      style: const TextStyle(
+                        fontSize: 23,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+
+              // Smaller version of the original image.
+              SizedBox(
+                height: 180,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    color: Colors.black12,
+                    child: Image.asset(
+                      question.imagePath,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Text('Image could not be loaded.'),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Show what the player selected.
+              const Text(
+                'Your answer',
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                record.selectedAnswer,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Always display the correct answer.
+              const Text(
+                'Correct answer',
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                question.correctAnswer,
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Main educational explanation.
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.menu_book),
+                          SizedBox(width: 8),
+                          Text(
+                            'Explanation',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Text(
+                        explanation,
+                        style: const TextStyle(fontSize: 16, height: 1.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Additional explanation for a wrong answer.
+              if (!isCorrect) ...[
+                const SizedBox(height: 12),
+
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Why your answer was incorrect',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        Text(
+                          wrongAnswerExplanation ??
+                              'A comparison has not been '
+                                  'added for this option yet.',
+                          style: const TextStyle(fontSize: 16, height: 1.5),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // Show database errors without losing the answer.
+        if (_historyError != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'Could not save this round: $_historyError',
+              style: const TextStyle(color: Colors.red, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+        // Continue button remains visible when scrolling.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton(
+              onPressed: _isSavingHistory ? null : _nextQuestion,
+              child: _isSavingHistory
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      _historyError != null
+                          ? 'Retry Saving'
+                          : isLastQuestion
+                          ? 'Save and View Results'
+                          : 'Next Question',
+                    ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   // --------------------------------------------------
   // RESULTS SCREEN
   // --------------------------------------------------
@@ -838,24 +1049,63 @@ switch (_screen) {
               itemCount: _answers.length,
               itemBuilder: (context, index) {
                 final record = _answers[index];
+                final question = record.question;
+
+                final explanation = question.explanation.isNotEmpty
+                    ? question.explanation
+                    : 'No explanation has been added yet.';
+
+                final wrongExplanation =
+                    question.incorrectExplanations[record.selectedAnswer];
 
                 return Card(
-                  child: ListTile(
+                  child: ExpansionTile(
+                    key: PageStorageKey<int>(question.id),
+
                     leading: Icon(
                       record.isCorrect ? Icons.check_circle : Icons.cancel,
                       color: record.isCorrect ? Colors.green : Colors.red,
                     ),
-                    title: Text(
-                      '${index + 1}. '
-                      '${record.question.correctAnswer}',
-                    ),
+
+                    title: Text('${index + 1}. ${question.correctAnswer}'),
+
                     subtitle: Text(
-                      'Your answer: '
-                      '${record.selectedAnswer}\n'
-                      '${record.question.category} • '
-                      '${record.question.difficulty}',
+                      'Your answer: ${record.selectedAnswer}\n'
+                      '${question.category} • '
+                      '${question.difficulty}',
                     ),
-                    isThreeLine: true,
+
+                    childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+
+                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
+
+                    children: [
+                      const Text(
+                        'Explanation',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(explanation),
+
+                      if (!record.isCorrect) ...[
+                        const SizedBox(height: 14),
+
+                        const Text(
+                          'Why your selection was incorrect',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Text(
+                          wrongExplanation ??
+                              'No comparison has been added '
+                                  'for this option yet.',
+                        ),
+                      ],
+                    ],
                   ),
                 );
               },
