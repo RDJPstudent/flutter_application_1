@@ -8,6 +8,8 @@ import 'models/quiz_question.dart';
 import 'data/history_repository.dart';
 import 'screens/statistics_screen.dart';
 
+import 'services/adaptive_question_selector.dart';
+
 void main() {
   runApp(const ImageQuizApp());
 }
@@ -24,6 +26,8 @@ class AnswerRecord {
 
 // The three main states of our application.
 enum GameScreen { setup, quiz, results }
+
+enum QuizMode { random, adaptive }
 
 class ImageQuizApp extends StatelessWidget {
   const ImageQuizApp({super.key});
@@ -51,6 +55,10 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   static const String all = '__all__';
+
+  QuizMode _selectedMode = QuizMode.random;
+
+  bool _isPreparingQuiz = false;
 
   // Full question library.
   List<QuizQuestion> _questionBank = [];
@@ -184,28 +192,73 @@ class _QuizScreenState extends State<QuizScreen> {
   // GAME LOGIC
   // --------------------------------------------------
 
-  void _startGame() {
-    final available = _filteredQuestions;
+  Future<void> _startGame() async {
+    if (_isPreparingQuiz) return;
 
-    if (available.isEmpty ||
-        _questionCount < 1 ||
-        _questionCount > available.length) {
+    final available = _filteredQuestions;
+    final count = _questionCount;
+    final mode = _selectedMode;
+
+    // Validate the requested round.
+    if (available.isEmpty || count < 1 || count > available.length) {
       return;
     }
 
-    final shuffled = List<QuizQuestion>.of(available)..shuffle();
-
     setState(() {
-      _questions = shuffled.take(_questionCount).toList();
-      _answers.clear();
-      _currentIndex = 0;
-      _selectedAnswer = null;
-      _isSavingHistory = false;
-      _historyError = null;
-
-      _shuffleOptions();
-      _screen = GameScreen.quiz;
+      _isPreparingQuiz = true;
     });
+
+    try {
+      late final List<QuizQuestion> selectedQuestions;
+
+      if (mode == QuizMode.adaptive) {
+        // Read the saved history from SQLite.
+        final performance = await HistoryRepository.loadQuestionPerformance();
+
+        // Apply weighted random selection.
+        selectedQuestions = AdaptiveQuestionSelector.selectQuestions(
+          available: available,
+          count: count,
+          performance: performance,
+        );
+      } else {
+        // Preserve the original equal-probability mode.
+        final shuffled = List<QuizQuestion>.of(available)..shuffle();
+
+        selectedQuestions = shuffled.take(count).toList();
+      }
+
+      if (!mounted) return;
+
+      // Both modes use the same gameplay mechanics.
+      setState(() {
+        _questions = selectedQuestions;
+
+        _answers.clear();
+        _currentIndex = 0;
+        _selectedAnswer = null;
+
+        _isSavingHistory = false;
+        _historyError = null;
+
+        _shuffleOptions();
+
+        _screen = GameScreen.quiz;
+        _isPreparingQuiz = false;
+      });
+    } catch (error) {
+      debugPrint('Quiz preparation failed: $error');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isPreparingQuiz = false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not prepare quiz: $error')));
+    }
   }
 
   void _shuffleOptions() {
@@ -438,6 +491,48 @@ class _QuizScreenState extends State<QuizScreen> {
           },
         ),
 
+        const SizedBox(height: 20),
+
+        const Text(
+          'Practice Mode',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+        ),
+
+        const SizedBox(height: 12),
+
+        SegmentedButton<QuizMode>(
+          segments: const [
+            ButtonSegment<QuizMode>(
+              value: QuizMode.random,
+              label: Text('Random'),
+              icon: Icon(Icons.shuffle),
+            ),
+            ButtonSegment<QuizMode>(
+              value: QuizMode.adaptive,
+              label: Text('Adaptive'),
+              icon: Icon(Icons.psychology),
+            ),
+          ],
+          selected: {_selectedMode},
+          onSelectionChanged: _isPreparingQuiz
+              ? null
+              : (selectedModes) {
+                  setState(() {
+                    _selectedMode = selectedModes.first;
+                  });
+                },
+        ),
+
+        const SizedBox(height: 10),
+
+        Text(
+          _selectedMode == QuizMode.adaptive
+              ? 'Prioritizes questions you have answered '
+                    'incorrectly and questions you have not tried.'
+              : 'Selects eligible questions with equal probability.',
+          style: const TextStyle(fontSize: 13, color: Colors.grey),
+        ),
+
         const SizedBox(height: 24),
 
         Card(
@@ -468,9 +563,17 @@ class _QuizScreenState extends State<QuizScreen> {
         SizedBox(
           height: 54,
           child: FilledButton.icon(
-            onPressed: availableCount > 0 ? _startGame : null,
-            icon: const Icon(Icons.play_arrow),
-            label: const Text('Start Quiz'),
+            onPressed: availableCount > 0 && !_isPreparingQuiz
+                ? _startGame
+                : null,
+            icon: _isPreparingQuiz
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.play_arrow),
+            label: Text(_isPreparingQuiz ? 'Preparing Quiz...' : 'Start Quiz'),
           ),
         ),
 
@@ -765,8 +868,8 @@ class _QuizScreenState extends State<QuizScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: _startGame,
-                  child: const Text('Play Again'),
+                  onPressed: _isPreparingQuiz ? null : _startGame,
+                  child: Text(_isPreparingQuiz ? 'Preparing...' : 'Play Again'),
                 ),
               ),
             ],

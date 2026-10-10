@@ -89,6 +89,25 @@ class QuizStatistics {
       totalAnswers == 0 ? 0 : correctAnswers / totalAnswers;
 }
 
+
+class QuestionPerformance {
+  final int questionId;
+  final int attempts;
+  final int correct;
+
+  const QuestionPerformance({
+    required this.questionId,
+    required this.attempts,
+    required this.correct,
+  });
+
+  int get incorrect => attempts - correct;
+
+  double get accuracy =>
+      attempts == 0 ? 0 : correct / attempts;
+}
+
+
 class HistoryRepository {
   static Future<Database>? _databaseFuture;
 
@@ -275,4 +294,36 @@ class HistoryRepository {
       }).toList(),
     );
   }
+
+  
+static Future<Map<int, QuestionPerformance>>
+    loadQuestionPerformance() async {
+  final db = await _database;
+
+  final rows = await db.rawQuery('''
+    SELECT
+      question_id,
+      COUNT(*) AS attempts,
+      COALESCE(SUM(is_correct), 0) AS correct
+    FROM quiz_answers
+    GROUP BY question_id
+  ''');
+
+  final performance = <int, QuestionPerformance>{};
+
+  for (final row in rows) {
+    final questionId =
+        (row['question_id'] as num).toInt();
+
+    performance[questionId] = QuestionPerformance(
+      questionId: questionId,
+      attempts: (row['attempts'] as num).toInt(),
+      correct: (row['correct'] as num).toInt(),
+    );
+  }
+
+  return performance;
+}
+
+
 }
