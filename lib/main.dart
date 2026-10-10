@@ -386,14 +386,21 @@ class _QuizScreenState extends State<QuizScreen> {
         ),
       );
     } else {
-      switch (_screen) {
-        case GameScreen.setup:
-          content = _buildSetupScreen();
-        case GameScreen.quiz:
-          content = _buildQuizScreen();
-        case GameScreen.results:
-          content = _buildResultsScreen();
-      }
+      
+switch (_screen) {
+  case GameScreen.setup:
+    content = _buildSetupScreen();
+
+  case GameScreen.quiz:
+    content = _buildQuizScreen();
+
+  case GameScreen.feedback:
+    content = _buildFeedbackScreen();
+
+  case GameScreen.results:
+    content = _buildResultsScreen();
+}
+
     }
 
     return Scaffold(body: SafeArea(child: content));
