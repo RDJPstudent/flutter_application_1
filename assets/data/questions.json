@@ -1,0 +1,75 @@
+
+[
+  {
+    "id": 1,
+    "category": "Geography",
+    "difficulty": "Easy",
+    "imagePath": "assets/images/mountain_range.jpg",
+    "correctAnswer": "Mountain range",
+    "incorrectAnswers": [
+      "Mountain pass",
+      "Plateau",
+      "Valley"
+    ]
+  },
+  {
+    "id": 2,
+    "category": "Geography",
+    "difficulty": "Easy",
+    "imagePath": "assets/images/canyon.jpg",
+    "correctAnswer": "Canyon",
+    "incorrectAnswers": [
+      "River delta",
+      "Glacier",
+      "Volcanic cone"
+    ]
+  },
+  {
+    "id": 3,
+    "category": "Geography",
+    "difficulty": "Easy",
+    "imagePath": "assets/images/waterfall.jpg",
+    "correctAnswer": "Waterfall",
+    "incorrectAnswers": [
+      "Rapids",
+      "Estuary",
+      "Glacier"
+    ]
+  },
+  {
+    "id": 4,
+    "category": "Geography",
+    "difficulty": "Easy",
+    "imagePath": "assets/images/sand_dunes.jpg",
+    "correctAnswer": "Sand dunes",
+    "incorrectAnswers": [
+      "Plateau",
+      "Riverbank",
+      "Rocky ridge"
+    ]
+  },
+  {
+    "id": 5,
+    "category": "Geology",
+    "difficulty": "Intermediate",
+    "imagePath": "assets/images/volcano.jpg",
+    "correctAnswer": "Volcano",
+    "incorrectAnswers": [
+      "Mesa",
+      "Butte",
+      "Glacial valley"
+    ]
+  },
+  {
+    "id": 6,
+    "category": "Geography",
+    "difficulty": "Easy",
+    "imagePath": "assets/images/glacier.jpg",
+    "correctAnswer": "Glacier",
+    "incorrectAnswers": [
+        "Sand dune",
+        "Lava flow",
+        "River delta"
+    ]
+  }
+]
